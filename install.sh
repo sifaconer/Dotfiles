@@ -2,11 +2,9 @@
 # ╔══════════════════════════════════════════════════════════════╗
 # ║  DOTFILES INSTALLER — Hyprland on CachyOS/Arch              ║
 # ║  Uso: ./install.sh | ./install.sh --yes --variant dev|macos ║
-# ║       ./install.sh --skip-packages | ./install.sh --uninstall║
 # ╚══════════════════════════════════════════════════════════════╝
 set -Eeuo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
-IFS=$'\n\t'
 
 readonly SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 readonly TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
@@ -16,7 +14,6 @@ readonly BACKUP_DIR="$HOME/.config-backup-${TIMESTAMP}"
 
 ASSUME_YES=0; INSTALL_PACKAGES=1; VARIANT=""; UNINSTALL=0; AUR=""; GPU="unknown"
 
-# ── Colors & Logging ──────────────────────────────────────────
 CR=$'\e[0m'; CB=$'\e[1m'; CG=$'\e[32m'; CRD=$'\e[31m'; CY=$'\e[33m'; CBL=$'\e[34m'; CM=$'\e[35m'; CC=$'\e[36m'; CD=$'\e[2m'
 info()  { printf '%s[INFO]%s %s\n'  "$CBL" "$CR" "$*" | tee -a "$LOG_FILE"; }
 ok()    { printf '%s[ OK ]%s %s\n'  "$CG"  "$CR" "$*" | tee -a "$LOG_FILE"; }
@@ -51,7 +48,6 @@ BANNER
     printf '%s\n\n' "$CR"
 }
 
-# ── Parse args ────────────────────────────────────────────────
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -67,9 +63,9 @@ parse_args() {
     done
 }
 
-# ── Detection ─────────────────────────────────────────────────
 detect_distro() {
     [[ -r /etc/os-release ]] || die "Cannot read /etc/os-release"
+    # shellcheck source=/dev/null
     . /etc/os-release
     [[ "$ID" == "arch" || "${ID_LIKE:-}" == *arch* || "$ID" == "cachyos" ]] \
         || die "Only Arch/CachyOS supported. Detected: $ID"
@@ -84,7 +80,6 @@ detect_gpu() {
     info "GPU: $GPU"
 }
 
-# ── Variant selection ─────────────────────────────────────────
 select_variant() {
     if [[ -n "$VARIANT" ]]; then
         [[ "$VARIANT" == "dev" || "$VARIANT" == "macos" ]] || die "Invalid variant: $VARIANT"
@@ -105,7 +100,6 @@ select_variant() {
     printf '%s║     swww (animated) · rofi spotlight · dock        ║%s\n' "$CD" "$CR"
     printf '%s╚══════════════════════════════════════════════════╝%s\n' "$CB" "$CR"
     echo ""
-
     local choice
     read -r -p "$(printf '%sElige [1/2]: %s' "$CC" "$CR")" choice
     case "$choice" in
@@ -116,7 +110,6 @@ select_variant() {
     ok "Variant: $VARIANT"
 }
 
-# ── Packages ──────────────────────────────────────────────────
 ensure_aur_helper() {
     have paru && { AUR=paru; return; }
     have yay  && { AUR=yay;  return; }
@@ -131,7 +124,17 @@ ensure_aur_helper() {
 install_packages() {
     local kind="$1" file="$2"
     [[ -r "$file" ]] || { warn "Missing: $file"; return 0; }
-    mapfile -t pkgs < <(grep -vE '^\s*(#|$)' "$file" | tr -d '[:space:]' | grep -v '^$')
+
+    # FIX: leer línea por línea, trim espacios por línea (NO borrar newlines)
+    local -a pkgs=()
+    while IFS= read -r line; do
+        # Quitar comentarios inline y trim
+        line="${line%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [[ -n "$line" ]] && pkgs+=("$line")
+    done < "$file"
+
     (( ${#pkgs[@]} )) || return 0
     info "Installing ${#pkgs[@]} $kind packages..."
     case "$kind" in
@@ -150,7 +153,6 @@ install_all_packages() {
     ok "All packages installed"
 }
 
-# ── Backup & Symlinks ────────────────────────────────────────
 backup_if_exists() {
     local target="$1"
     [[ -e "$target" || -L "$target" ]] || return 0
@@ -172,31 +174,23 @@ link_dotfiles() {
         ln -snf "$SCRIPT_DIR/.config/$cfg" "$HOME/.config/$cfg"
         ok "Linked .config/$cfg"
     done
-
-    # Starship
     backup_if_exists "$HOME/.config/starship.toml"
     ln -snf "$SCRIPT_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
-
-    # Zshrc
     backup_if_exists "$HOME/.zshrc"
     ln -snf "$SCRIPT_DIR/home/.zshrc" "$HOME/.zshrc"
-
-    # .local/bin
     mkdir -p "$HOME/.local/bin"
     if [[ -d "$SCRIPT_DIR/.local/bin" ]] && ls "$SCRIPT_DIR/.local/bin"/* &>/dev/null; then
         for script in "$SCRIPT_DIR/.local/bin"/*; do
             ln -snf "$script" "$HOME/.local/bin/$(basename "$script")"
         done
     fi
-
     ok "Dotfiles linked. Backups at: $BACKUP_DIR"
 }
 
-# ── Variant config ────────────────────────────────────────────
 configure_variant() {
     info "Configuring variant: $VARIANT"
+    mkdir -p "$HOME/.config/hypr"
     echo "$VARIANT" > "$HOME/.config/hypr/.variant"
-
     if [[ "$VARIANT" == "macos" ]]; then
         for f in "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"; do
             [[ -f "$f" ]] || continue
@@ -210,7 +204,6 @@ configure_variant() {
     fi
 }
 
-# ── NVIDIA ────────────────────────────────────────────────────
 configure_nvidia() {
     [[ "$GPU" == "nvidia" ]] || return 0
     local conf="$HOME/.config/hypr/hyprland.lua"
@@ -221,7 +214,6 @@ configure_nvidia() {
     fi
 }
 
-# ── Services ──────────────────────────────────────────────────
 enable_services() {
     ask "Enable system services?" y || return 0
     for svc in NetworkManager bluetooth; do
@@ -234,17 +226,14 @@ enable_services() {
     ok "Services configured"
 }
 
-# ── Shell ─────────────────────────────────────────────────────
 setup_shell() {
     [[ "$SHELL" == *zsh* ]] && { info "Zsh already default"; return 0; }
     have zsh && ask "Set zsh as default shell?" y && chsh -s "$(command -v zsh)" "$USER"
 }
 
-# ── Post-install ──────────────────────────────────────────────
 post_install() {
     have fc-cache && { info "Refreshing fonts..."; fc-cache -fv >> "$LOG_FILE" 2>&1; }
     mkdir -p "$HOME/Pictures/Screenshots" "$HOME/Pictures/Wallpapers"
-
     echo ""
     printf '%s╔══════════════════════════════════════════════════╗%s\n' "$CG" "$CR"
     printf '%s║  ✅ Installation complete!                       ║%s\n' "$CG" "$CR"
@@ -253,15 +242,13 @@ post_install() {
     printf '%s║  GPU:     %-38s ║%s\n' "$CG" "$GPU" "$CR"
     printf '%s╠══════════════════════════════════════════════════╣%s\n' "$CG" "$CR"
     printf '%s║  Next steps:                                     ║%s\n' "$CG" "$CR"
-    printf '%s║  1. Add wallpaper → ~/Pictures/Wallpapers/       ║%s\n' "$CD" "$CR"
-    printf '%s║     ln -sf wall.jpg ~/Pictures/Wallpapers/current.jpg ║%s\n' "$CD" "$CR"
+    printf '%s║  1. Wallpaper → ~/Pictures/Wallpapers/current.jpg║%s\n' "$CD" "$CR"
     printf '%s║  2. Edit ~/.config/hypr/userprefs.lua            ║%s\n' "$CD" "$CR"
     printf '%s║  3. Reboot → select Hyprland in greetd           ║%s\n' "$CD" "$CR"
     printf '%s║  4. SUPER+Q=terminal  SUPER+R=launcher           ║%s\n' "$CD" "$CR"
     printf '%s╚══════════════════════════════════════════════════╝%s\n' "$CG" "$CR"
 }
 
-# ── Uninstall ─────────────────────────────────────────────────
 do_uninstall() {
     info "Removing symlinks..."
     local configs=(hypr waybar ghostty fuzzel mako yazi wlogout gtk-3.0 gtk-4.0 fastfetch tmux)
@@ -274,7 +261,6 @@ do_uninstall() {
     exit 0
 }
 
-# ── Main ──────────────────────────────────────────────────────
 main() {
     [[ $EUID -ne 0 ]] || die "Don't run as root"
     parse_args "$@"
