@@ -34,14 +34,18 @@ hl.window_rule({ name = "terminal-opacity",
     match = { class = "^(ghostty|kitty|Alacritty|foot|com%.mitchellh%.ghostty)$" },
     opacity = "0.92 0.85" })
 
--- ██ IDLE INHIBIT (no sleep en fullscreen video) ══════════════
-hl.window_rule({ name = "idle-inhibit-media",
-    match = { class = "^(firefox|mpv|vlc|FreeTube|chromium)$", fullscreen = true },
-    idleinhibit = "fullscreen" })
+-- ██ IDLE INHIBIT ═════════════════════════════════════════════
+-- NOTA: 'idleinhibit' no existe en hl.window_rule de 0.55 todavía.
+-- Equivalente hyprlang: windowrulev2 = idleinhibit fullscreen, class:^(mpv|vlc)$
+-- hl.window_rule({ name = "idle-inhibit-media",
+--     match = { class = "^(firefox|mpv|vlc|FreeTube|chromium)$", fullscreen = true },
+--     idleinhibit = "fullscreen" })
 
 -- ██ PRIVACY ══════════════════════════════════════════════════
-hl.window_rule({ name = "noscreenshare-secrets",
-    match = { class = "^(KeePassXC|1Password)$" }, noscreenshare = true })
+-- NOTA: 'noscreenshare' no existe en hl.window_rule de 0.55 todavía.
+-- Equivalente hyprlang: windowrulev2 = noscreenshare, class:^(KeePassXC)$
+-- hl.window_rule({ name = "noscreenshare-secrets",
+--     match = { class = "^(KeePassXC|1Password)$" }, noscreenshare = true })
 
 -- ██ SMART GAPS (sin gaps con 1 sola ventana tileada) ═════════
 hl.workspace_rule({ workspace = "w[tv1]", gaps_out = 0, gaps_in = 0 })
@@ -53,7 +57,8 @@ hl.window_rule({ name = "smart-gaps-f1",
 
 -- ██ LAYER RULES (blur para barras, launchers, notificaciones) ═
 hl.layer_rule({ name = "blur-waybar",
-    match = { namespace = "waybar" }, blur = true, ignorezero = true })
+    match = { namespace = "waybar" }, blur = true })
+    -- NOTA: 'ignorezero' no existe en hl.layer_rule de 0.55 (campo futuro)
 hl.layer_rule({ name = "blur-launcher",
     match = { namespace = "^(rofi|fuzzel)$" }, blur = true })
 hl.layer_rule({ name = "blur-notifications",
