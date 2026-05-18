@@ -61,11 +61,10 @@ hl.bind(mainMod .. " + SHIFT + l", hl.dsp.window.move({ direction = "right" }))
 hl.bind(mainMod .. " + SHIFT + k", hl.dsp.window.move({ direction = "up" }))
 hl.bind(mainMod .. " + SHIFT + j", hl.dsp.window.move({ direction = "down" }))
 
--- Ciclar ventanas (útil en floating)
-hl.bind(mainMod .. " + Tab", function()
-    hl.dispatch(hl.dsp.window.cycle_next())
-    hl.dispatch(hl.dsp.window.bring_to_top())
-end, { description = "Cycle windows" })
+-- Ciclar ventanas — usa hyprctl directo (cycle_next no existe en Lua API 0.55)
+hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd(
+    "hyprctl dispatch cyclenext && hyprctl dispatch bringactivetotop"
+), { description = "Cycle windows" })
 
 -- ██ WORKSPACES 1-10 (loop Lua) ══════════════════════════════
 for i = 1, 10 do
@@ -111,14 +110,15 @@ hl.bind(mainMod .. " + SHIFT + L", hl.dsp.exec_cmd("wlogout"))
 hl.bind("switch:on:Lid Switch",    hl.dsp.exec_cmd("hyprlock"), { locked = true })
 
 -- ██ RESIZE (SUPER+CTRL+flechas, con repeat) ═════════════════
+-- NOTA: resize requiere {x, y} numéricos
 local step = 30
 for _, d in ipairs({
-    { key = "CTRL + right", delta = step .. " 0" },
-    { key = "CTRL + left",  delta = "-" .. step .. " 0" },
-    { key = "CTRL + up",    delta = "0 -" .. step },
-    { key = "CTRL + down",  delta = "0 " .. step },
+    { key = "CTRL + right", x =  step, y = 0     },
+    { key = "CTRL + left",  x = -step, y = 0     },
+    { key = "CTRL + up",    x = 0,     y = -step },
+    { key = "CTRL + down",  x = 0,     y =  step },
 }) do
-    hl.bind(mainMod .. " + " .. d.key, hl.dsp.window.resize({ delta = d.delta }), { repeating = true })
+    hl.bind(mainMod .. " + " .. d.key, hl.dsp.window.resize({ x = d.x, y = d.y }), { repeating = true })
 end
 
 -- ██ FUNCIONES AVANZADAS (solo posibles en Lua) ═══════════════

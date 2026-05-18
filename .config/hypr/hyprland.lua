@@ -19,9 +19,9 @@
 -- ║  11. userprefs→ TUS overrides (nunca sobrescrito)           ║
 -- ╚══════════════════════════════════════════════════════════════╝
 
-require("conf/env")
+require("conf/theme")    -- ⚠️  PRIMERO: define la tabla global Theme
+require("conf/env")      -- usa Theme.cursor_theme / Theme.cursor_size
 require("conf/monitors")
-require("conf/theme")
 require("conf/general")
 require("conf/decoration")
 require("conf/animations")

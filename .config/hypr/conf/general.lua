@@ -26,7 +26,6 @@ hl.config({
         force_default_wallpaper = 0,
         enable_swallow          = true,
         swallow_regex           = "^(ghostty|kitty|Alacritty|foot)$",
-        new_window_takes_over_fs = 0,
         middle_click_paste      = true,
     },
 
