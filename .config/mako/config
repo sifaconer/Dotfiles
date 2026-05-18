@@ -1,0 +1,23 @@
+# MAKO — Notificaciones (variante dev). QUÉ EDITAR: colors, timeout
+font=Maple Mono NF 11
+background-color=#1e1e2eee
+text-color=#cdd6f4
+border-color=#cba6f7
+border-size=2
+border-radius=10
+padding=12
+margin=8
+width=350
+height=200
+default-timeout=5000
+max-visible=3
+layer=overlay
+anchor=top-right
+
+[urgency=high]
+border-color=#f38ba8
+default-timeout=10000
+
+[urgency=low]
+border-color=#89b4fa
+default-timeout=3000

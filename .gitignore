@@ -1,0 +1,12 @@
+*.key
+*.pem
+id_*
+.env
+.env.*
+auth.*
+.DS_Store
+Thumbs.db
+*.bak
+*.orig
+node_modules/
+__pycache__/

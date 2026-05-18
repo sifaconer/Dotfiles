@@ -1,0 +1,13 @@
+# AUR packages — ambas variantes
+hyprshot
+wl-screenrec
+fuzzel
+rofi-wayland
+wlogout
+catppuccin-gtk-theme-mocha
+papirus-icon-theme
+bibata-cursor-theme
+ttf-maple-mono-nf
+atuin
+satty
+wl-clip-persist

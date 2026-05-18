@@ -1,0 +1,101 @@
+# PACMAN packages — core (una línea por paquete, # = comentario)
+
+# Hyprland ecosystem
+hyprland
+hyprlock
+hypridle
+hyprpaper
+hyprpolkitagent
+hyprpicker
+hyprcursor
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+qt5-wayland
+qt6-wayland
+
+# Bar / Terminal
+waybar
+ghostty
+
+# Screenshot / Clipboard
+grim
+slurp
+wl-clipboard
+cliphist
+
+# Audio
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+pavucontrol
+pamixer
+playerctl
+
+# Brightness / Network / Bluetooth
+brightnessctl
+networkmanager
+network-manager-applet
+bluez
+bluez-utils
+blueman
+
+# Theme / Appearance
+nwg-look
+qt5ct
+qt6ct
+kvantum
+
+# File Manager
+thunar
+gvfs
+tumbler
+yazi
+
+# Fonts (Maple Mono NF via AUR)
+inter-font
+noto-fonts
+noto-fonts-cjk-vf
+noto-fonts-emoji
+ttf-nerd-fonts-symbols
+
+# Shell / CLI
+zsh
+starship
+fzf
+ripgrep
+fd
+bat
+eza
+zoxide
+git-delta
+btop
+bottom
+dust
+duf
+tealdeer
+procs
+jq
+glow
+neovim
+fastfetch
+tmux
+direnv
+just
+
+# Dev
+git
+base-devel
+lazygit
+github-cli
+mise
+rustup
+
+# Display manager
+greetd
+greetd-tuigreet
+
+# Misc
+polkit
+stow
+wf-recorder
