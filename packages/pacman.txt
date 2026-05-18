@@ -55,7 +55,7 @@ yazi
 # Fonts (Maple Mono NF via AUR)
 inter-font
 noto-fonts
-noto-fonts-cjk-vf
+noto-fonts-cjk
 noto-fonts-emoji
 ttf-nerd-fonts-symbols
 
