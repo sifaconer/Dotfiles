@@ -31,8 +31,8 @@ require("lazy").setup("plugins", {
   -- Detección automática de plugins en lua/plugins/
   -- (no hay que registrar nada manualmente)
 
-  -- Colorscheme inicial (vacío — se setea en Capa 2 con catppuccin)
-  install = { colorscheme = {} },
+  -- Colorscheme inicial (catppuccin se carga en Capa 2)
+  install = { colorscheme = { "catppuccin-nvim" } },
 
   -- Checker: avisar si hay updates (no instalar automáticamente)
   checker = { enabled = true, notify = false },
