@@ -1,4 +1,5 @@
 # PACMAN packages — core (una línea por paquete, # = comentario)
+# Sin AUR. Todo desde repos oficiales (Core/Extra/Multilib).
 
 # Hyprland ecosystem
 hyprland
@@ -13,15 +14,25 @@ xdg-desktop-portal-gtk
 qt5-wayland
 qt6-wayland
 
-# Bar / Terminal
-waybar
-ghostty
+# Shell (quickshell reemplaza waybar/mako/fuzzel/wlogout)
+quickshell
+qt6-svg            # SVG icons en quickshell (requerido para IconImage)
+qt6-imageformats   # WEBP y formatos extra en quickshell
+qt6-5compat        # gaussian blur y efectos en quickshell
+
+# Terminal / Editor
+kitty
+neovim
 
 # Screenshot / Clipboard
 grim
 slurp
+swappy             # anotación de screenshots (opcional, reemplaza satty)
 wl-clipboard
 cliphist
+
+# Launcher (reclasificado desde AUR — está en Extra)
+fuzzel             # TODO: migrar a popup de quickshell
 
 # Audio
 pipewire
@@ -45,6 +56,7 @@ nwg-look
 qt5ct
 qt6ct
 kvantum
+papirus-icon-theme # reclasificado desde AUR (estética KDE)
 
 # File Manager
 thunar
@@ -52,12 +64,13 @@ gvfs
 tumbler
 yazi
 
-# Fonts (Maple Mono NF via AUR)
+# Fonts (de repos oficiales — sin AUR)
 inter-font
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
-ttf-nerd-fonts-symbols
+ttf-jetbrains-mono  # fuente principal (reemplaza Maple Mono NF)
+ttf-nerd-fonts-symbols  # glifos Nerd Font vía fallback de fontconfig
 
 # Shell / CLI
 zsh
@@ -77,11 +90,11 @@ tealdeer
 procs
 jq
 glow
-neovim
 fastfetch
 tmux
 direnv
 just
+atuin             # reclasificado desde AUR (historial de shell)
 
 # Dev
 git

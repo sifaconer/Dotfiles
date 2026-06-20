@@ -1,7 +1,0 @@
-# AUR packages EXTRA for macOS-like variant
-swww
-swaync
-nwg-dock-hyprland
-whitesur-gtk-theme-git
-whitesur-icon-theme-git
-whitesur-cursor-theme-git

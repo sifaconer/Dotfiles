@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  DOTFILES INSTALLER — Hyprland on CachyOS/Arch              ║
-# ║  Uso: ./install.sh | ./install.sh --yes --variant dev|macos ║
+# ║  DOTFILES INSTALLER — Hyprland + quickshell on Arch          ║
+# ║  Uso: ./install.sh | ./install.sh --yes | ./install.sh -h    ║
+# ║  Sin AUR. Sin variantes. Todo desde repos oficiales.         ║
 # ╚══════════════════════════════════════════════════════════════╝
 set -Euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
@@ -12,7 +13,7 @@ readonly LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles"
 readonly LOG_FILE="${LOG_DIR}/install-${TIMESTAMP}.log"
 readonly BACKUP_DIR="$HOME/.config-backup-${TIMESTAMP}"
 
-ASSUME_YES=0; INSTALL_PACKAGES=1; VARIANT=""; UNINSTALL=0; AUR=""; GPU="unknown"
+ASSUME_YES=0; INSTALL_PACKAGES=1; UNINSTALL=0; GPU="unknown"
 
 CR=$'\e[0m'; CB=$'\e[1m'; CG=$'\e[32m'; CRD=$'\e[31m'; CY=$'\e[33m'
 CBL=$'\e[34m'; CM=$'\e[35m'; CC=$'\e[36m'; CD=$'\e[2m'
@@ -55,10 +56,9 @@ parse_args() {
         case "$1" in
             --yes|-y)        ASSUME_YES=1 ;;
             --skip-packages) INSTALL_PACKAGES=0 ;;
-            --variant)       VARIANT="${2:-}"; shift ;;
             --uninstall)     UNINSTALL=1 ;;
             --help|-h)
-                echo "Uso: ./install.sh [--yes] [--variant dev|macos] [--skip-packages] [--uninstall]"
+                echo "Uso: ./install.sh [--yes] [--skip-packages] [--uninstall]"
                 exit 0 ;;
             *) warn "Opción desconocida: $1" ;;
         esac; shift
@@ -84,37 +84,6 @@ detect_gpu() {
     info "GPU: $GPU"
 }
 
-# ── Variante ──────────────────────────────────────────────────
-select_variant() {
-    if [[ -n "$VARIANT" ]]; then
-        [[ "$VARIANT" == "dev" || "$VARIANT" == "macos" ]] || die "Variante inválida: $VARIANT"
-        return
-    fi
-    (( ASSUME_YES )) && { VARIANT="dev"; return; }
-
-    echo ""
-    printf '%s╔══════════════════════════════════════════════════╗%s\n' "$CB" "$CR"
-    printf '%s║  Elige tu estilo visual:                         ║%s\n' "$CB" "$CR"
-    printf '%s╠══════════════════════════════════════════════════╣%s\n' "$CB" "$CR"
-    printf '%s║  %s1) Dev Minimalista%s                              ║%s\n' "$CB" "$CG" "$CB" "$CR"
-    printf '%s║     Catppuccin Mocha · blur sutil · mako          ║%s\n' "$CD" "$CR"
-    printf '%s║     hyprpaper · fuzzel · gaps 4/8 · Maple Mono    ║%s\n' "$CD" "$CR"
-    printf '%s║                                                  ║%s\n' "$CB" "$CR"
-    printf '%s║  %s2) macOS-like%s                                   ║%s\n' "$CB" "$CC" "$CB" "$CR"
-    printf '%s║     WhiteSur theme · blur vidrio · swaync          ║%s\n' "$CD" "$CR"
-    printf '%s║     swww (animated) · rofi spotlight · dock        ║%s\n' "$CD" "$CR"
-    printf '%s╚══════════════════════════════════════════════════╝%s\n' "$CB" "$CR"
-    echo ""
-    local choice
-    read -r -p "$(printf '%sElige [1/2]: %s' "$CC" "$CR")" choice
-    case "$choice" in
-        1|dev)   VARIANT="dev" ;;
-        2|macos) VARIANT="macos" ;;
-        *)       VARIANT="dev"; warn "Opción inválida, usando 'dev'" ;;
-    esac
-    ok "Variante seleccionada: $VARIANT"
-}
-
 # ── Leer paquetes desde archivo ───────────────────────────────
 read_pkglist() {
     local file="$1"
@@ -131,30 +100,22 @@ read_pkglist() {
 
 # ── Instalar paquetes (bulk + fallback 1-a-1) ────────────────
 install_packages() {
-    local kind="$1" file="$2"
+    local file="$1"
     local -a pkgs=()
     read_pkglist "$file" pkgs
     (( ${#pkgs[@]} )) || return 0
 
-    info "Instalando ${#pkgs[@]} paquetes ($kind)..."
+    info "Instalando ${#pkgs[@]} paquetes (pacman)..."
 
-    local cmd
-    case "$kind" in
-        pacman) cmd="sudo pacman -S --needed --noconfirm" ;;
-        aur)
-            [[ -n "$AUR" ]] || { warn "Sin AUR helper, saltando $file"; return 0; }
-            cmd="$AUR -S --needed --noconfirm --sudoloop"
-            ;;
-        *) die "Tipo desconocido: $kind" ;;
-    esac
+    local cmd="sudo pacman -S --needed --noconfirm"
 
     # Intento bulk — si falla, va paquete por paquete
     if $cmd "${pkgs[@]}" >> "$LOG_FILE" 2>&1; then
-        ok "$kind: todos los paquetes instalados"
+        ok "pacman: todos los paquetes instalados"
         return 0
     fi
 
-    warn "$kind: fallo en bulk install, intentando uno a uno..."
+    warn "pacman: fallo en bulk install, intentando uno a uno..."
     local -a failed=()
     for pkg in "${pkgs[@]}"; do
         if $cmd "$pkg" >> "$LOG_FILE" 2>&1; then
@@ -171,26 +132,11 @@ install_packages() {
     fi
 }
 
-# ── AUR helper ────────────────────────────────────────────────
-ensure_aur_helper() {
-    if have paru; then AUR=paru; info "AUR helper: paru"; return; fi
-    if have yay;  then AUR=yay;  info "AUR helper: yay";  return; fi
-    info "Instalando paru-bin..."
-    sudo pacman -S --needed --noconfirm base-devel git
-    local tmp; tmp="$(mktemp -d)"
-    git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$tmp/paru-bin"
-    (cd "$tmp/paru-bin" && makepkg -si --noconfirm)
-    rm -rf "$tmp"; AUR=paru; ok "paru instalado"
-}
-
 install_all_packages() {
     (( INSTALL_PACKAGES )) || { info "Saltando instalación de paquetes (--skip-packages)"; return 0; }
     ask "¿Instalar paquetes?" y || return 0
 
-    install_packages pacman "$SCRIPT_DIR/packages/pacman.txt"
-    ensure_aur_helper
-    install_packages aur "$SCRIPT_DIR/packages/aur.txt"
-    [[ "$VARIANT" == "macos" ]] && install_packages aur "$SCRIPT_DIR/packages/aur-macos.txt"
+    install_packages "$SCRIPT_DIR/packages/pacman.txt"
     ok "Instalación de paquetes completa"
 }
 
@@ -203,59 +149,93 @@ backup_if_exists() {
     mv -v "$target" "$BACKUP_DIR/$rel" 2>&1 | tee -a "$LOG_FILE"
 }
 
+# ── Descubrimiento de paquetes (stow-native) ──────────────────
+# Cada dir top-level es un "paquete" que replica parte de $HOME:
+#   pkg/.config/<app>/  → $HOME/.config/<app>   (symlink del dir completo)
+#   pkg/.config/<file>  → $HOME/.config/<file>  (archivo suelto, ej: starship.toml)
+#   pkg/.zshrc          → $HOME/.zshrc          (dotfile en raíz del paquete)
+#   pkg/.local/bin/*    → $HOME/.local/bin/*    (mirror archivo a archivo)
+# Agregar una app = crear un dir top-level. Cero cambios de código.
+package_dirs() {
+    local d name
+    for d in "$SCRIPT_DIR"/*/; do
+        d="${d%/}"
+        name="$(basename "$d")"
+        [[ "$name" == "packages" ]] && continue
+        printf '%s\n' "$d"
+    done
+}
+
+# Enlaza (mode=link) o desenlaza (mode=unlink) un destino individual.
+apply_target() {
+    local mode="$1" src="$2" tgt="$3" rel="$4" name="$5"
+    case "$mode" in
+        link)
+            mkdir -p "$(dirname "$tgt")"
+            backup_if_exists "$tgt"
+            ln -snf "$src" "$tgt"
+            ok "  → $rel  [$name]"
+            ;;
+        unlink)
+            if [[ -L "$tgt" ]]; then rm -v "$tgt" 2>&1 | tee -a "$LOG_FILE"; fi
+            ;;
+    esac
+}
+
+# Mirror de un dir raíz del paquete (ej: .local/bin) archivo a archivo.
+# No hace folding: útil para dirs compartidos con estado del sistema.
+apply_dir() {
+    local mode="$1" src="$2" tgt="$3" rel="$4" name="$5"
+    [[ -d "$src" ]] || return 0
+    local entry base
+    for entry in "$src"/* "$src"/.[!.]*; do
+        [[ -e "$entry" ]] || continue
+        base="$(basename "$entry")"
+        if [[ -d "$entry" ]]; then
+            apply_dir "$mode" "$entry" "$tgt/$base" "$rel/$base" "$name"
+        else
+            apply_target "$mode" "$entry" "$tgt/$base" "$rel/$base" "$name"
+        fi
+    done
+}
+
+# Aplica un paquete completo: .config/* + dotfiles en raíz.
+apply_package() {
+    local pkg="$1" mode="$2" name; name="$(basename "$pkg")"
+    local entry base
+
+    # .config/<app> dirs y .config/<file> sueltos
+    if [[ -d "$pkg/.config" ]]; then
+        for entry in "$pkg/.config"/*; do
+            [[ -e "$entry" ]] || continue
+            base="$(basename "$entry")"
+            apply_target "$mode" "$entry" "$HOME/.config/$base" ".config/$base" "$name"
+        done
+    fi
+
+    # dotfiles en la raíz del paquete (ej: .zshrc, .local/bin)
+    # .config ya se manejó arriba; .git nunca se toca.
+    for entry in "$pkg"/.[!.]*; do
+        [[ -e "$entry" ]] || continue
+        base="$(basename "$entry")"
+        [[ "$base" == ".git" || "$base" == ".config" ]] && continue
+        if [[ -d "$entry" ]]; then
+            apply_dir "$mode" "$entry" "$HOME/$base" "$base" "$name"
+        else
+            apply_target "$mode" "$entry" "$HOME/$base" "$base" "$name"
+        fi
+    done
+}
+
 link_dotfiles() {
     ask "¿Hacer backup y crear symlinks?" y || return 0
     info "Enlazando dotfiles..."
     mkdir -p "$BACKUP_DIR"
-
-    local configs=(hypr waybar ghostty fuzzel mako yazi wlogout gtk-3.0 gtk-4.0 fastfetch tmux)
-    for cfg in "${configs[@]}"; do
-        [[ -d "$SCRIPT_DIR/.config/$cfg" ]] || continue
-        backup_if_exists "$HOME/.config/$cfg"
-        mkdir -p "$HOME/.config"
-        ln -snf "$SCRIPT_DIR/.config/$cfg" "$HOME/.config/$cfg"
-        ok "  → .config/$cfg"
-    done
-
-    # Starship (archivo suelto)
-    backup_if_exists "$HOME/.config/starship.toml"
-    ln -snf "$SCRIPT_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
-    ok "  → .config/starship.toml"
-
-    # Zshrc
-    backup_if_exists "$HOME/.zshrc"
-    ln -snf "$SCRIPT_DIR/home/.zshrc" "$HOME/.zshrc"
-    ok "  → .zshrc"
-
-    # .local/bin scripts
-    mkdir -p "$HOME/.local/bin"
-    if [[ -d "$SCRIPT_DIR/.local/bin" ]] && compgen -G "$SCRIPT_DIR/.local/bin/*" > /dev/null 2>&1; then
-        for script in "$SCRIPT_DIR/.local/bin"/*; do
-            ln -snf "$script" "$HOME/.local/bin/$(basename "$script")"
-            ok "  → .local/bin/$(basename "$script")"
-        done
-    fi
-
+    local pkg
+    while IFS= read -r pkg; do
+        apply_package "$pkg" link
+    done < <(package_dirs)
     ok "Dotfiles enlazados. Backup en: $BACKUP_DIR"
-}
-
-# ── Configurar variante ───────────────────────────────────────
-configure_variant() {
-    info "Configurando variante: $VARIANT"
-    mkdir -p "$HOME/.config/hypr"
-    echo "$VARIANT" > "$HOME/.config/hypr/.variant"
-
-    if [[ "$VARIANT" == "macos" ]]; then
-        for f in "$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"; do
-            [[ -f "$f" ]] || continue
-            sed -i 's/gtk-theme-name=.*/gtk-theme-name=WhiteSur-Dark/' "$f"
-            sed -i 's/gtk-icon-theme-name=.*/gtk-icon-theme-name=WhiteSur-dark/' "$f"
-            sed -i 's/gtk-cursor-theme-name=.*/gtk-cursor-theme-name=WhiteSur-cursors/' "$f"
-        done
-        ok "Variante macOS: WhiteSur + swww + swaync + dock"
-    else
-        ok "Variante dev: Catppuccin Mocha + hyprpaper + mako"
-    fi
 }
 
 # ── NVIDIA ────────────────────────────────────────────────────
@@ -314,7 +294,6 @@ post_install() {
     printf '%s╔══════════════════════════════════════════════════╗%s\n' "$CG" "$CR"
     printf '%s║  ✅ Instalación completa!                        ║%s\n' "$CG" "$CR"
     printf '%s╠══════════════════════════════════════════════════╣%s\n' "$CG" "$CR"
-    printf '%s║  Variante: %-37s ║%s\n' "$CG" "$VARIANT" "$CR"
     printf '%s║  GPU:      %-37s ║%s\n' "$CG" "$GPU" "$CR"
     printf '%s║  Log:      ~/.local/state/dotfiles/              ║%s\n' "$CG" "$CR"
     printf '%s╠══════════════════════════════════════════════════╣%s\n' "$CG" "$CR"
@@ -325,19 +304,18 @@ post_install() {
     printf '%s║  2. Editar ~/.config/hypr/userprefs.lua          ║%s\n' "$CD" "$CR"
     printf '%s║     (monitores, keybinds extra)                  ║%s\n' "$CD" "$CR"
     printf '%s║  3. Reiniciar → seleccionar Hyprland en greetd   ║%s\n' "$CD" "$CR"
-    printf '%s║  4. SUPER+Q=terminal  SUPER+R=launcher           ║%s\n' "$CD" "$CR"
+    printf '%s║  4. SUPER+Q=kitty  SUPER+R=fuzzel (TODO: qs)     ║%s\n' "$CD" "$CR"
+    printf '%s║  5. Diseñar tu shell en quickshell/shell.qml     ║%s\n' "$CD" "$CR"
     printf '%s╚══════════════════════════════════════════════════╝%s\n' "$CG" "$CR"
 }
 
 # ── Desinstalar ───────────────────────────────────────────────
 do_uninstall() {
     info "Eliminando symlinks..."
-    local configs=(hypr waybar ghostty fuzzel mako yazi wlogout gtk-3.0 gtk-4.0 fastfetch tmux)
-    for cfg in "${configs[@]}"; do
-        [[ -L "$HOME/.config/$cfg" ]] && rm -v "$HOME/.config/$cfg"
-    done
-    [[ -L "$HOME/.config/starship.toml" ]] && rm -v "$HOME/.config/starship.toml"
-    [[ -L "$HOME/.zshrc" ]] && rm -v "$HOME/.zshrc"
+    local pkg
+    while IFS= read -r pkg; do
+        apply_package "$pkg" unlink
+    done < <(package_dirs)
     ok "Symlinks eliminados. Restaura desde ~/.config-backup-* si necesitas."
     exit 0
 }
@@ -351,10 +329,8 @@ main() {
     (( UNINSTALL )) && do_uninstall
     detect_distro
     detect_gpu
-    select_variant
     install_all_packages
     link_dotfiles
-    configure_variant
     configure_nvidia
     enable_services
     setup_shell

@@ -1,20 +1,8 @@
-# Dotfiles — Hyprland 0.55+ Lua on CachyOS/Arch
+# Dotfiles — Hyprland + quickshell on Arch
 
-Configuración completa de Hyprland en **Lua** con dos variantes visuales, instalador interactivo, y stack CLI moderna. Font: **Maple Mono NF**.
+Configuración de Hyprland en **Lua** con **quickshell** como shell (barra, notificaciones, futuros launcher y power menu). Sin AUR — todo desde repos oficiales. Font: **JetBrains Mono** + Nerd Font symbols vía fallback.
 
-## Variantes
-
-| | Dev Minimalista | macOS-like |
-|---|---|---|
-| **Tema** | Catppuccin Mocha | WhiteSur Dark |
-| **Blur** | Sutil (6, 2 passes) | Vidrio (10, 4 passes) |
-| **Rounding** | 10px | 14px |
-| **Gaps** | 4/8 | 5/12 |
-| **Bordes** | Gradient mauve→blue, 2px | Blanco sutil, 1px |
-| **Wallpaper** | hyprpaper (estático) | swww (transiciones) |
-| **Notificaciones** | mako | swaync (notification center) |
-| **Launcher** | fuzzel | rofi-wayland (Spotlight) |
-| **Dock** | — | nwg-dock-hyprland |
+> **Estructura:** el repo usa **paquetes stow** — cada app es un dir top-level que replica su destino en `$HOME` (`pkg/.config/<app>` → `~/.config/<app>`). Agregar una app = crear una carpeta, **cero cambios** en `install.sh` o `Makefile`. Paquetes actuales: `hyprland`, `quickshell`, `kitty`, `nvim`, `tmux`, `yazi`, `fuzzel`, `gtk`, `fastfetch`, `starship`, `zsh`.
 
 ## Instalación
 
@@ -23,8 +11,7 @@ git clone https://github.com/sifaconer/Dotfiles.git ~/Dotfiles
 cd ~/Dotfiles
 chmod +x install.sh
 ./install.sh                          # interactivo
-./install.sh --yes --variant dev      # sin preguntas, dev
-./install.sh --yes --variant macos    # sin preguntas, macOS
+./install.sh --yes                    # sin preguntas
 ./install.sh --skip-packages          # solo symlinks
 ./install.sh --uninstall              # remover symlinks
 ```
@@ -37,7 +24,8 @@ ln -sf ~/Pictures/Wallpapers/mi-wall.jpg ~/Pictures/Wallpapers/current.jpg
 # 2. Editar monitores/keybinds personales
 nvim ~/.config/hypr/userprefs.lua
 # 3. Reboot → seleccionar Hyprland en greetd
-# 4. SUPER+Q = terminal, SUPER+R = launcher
+# 4. SUPER+Q = kitty, SUPER+R = fuzzel (TODO: migrar a quickshell)
+# 5. Diseñar tu shell en ~/.config/quickshell/shell.qml
 ```
 
 ---
@@ -47,55 +35,68 @@ nvim ~/.config/hypr/userprefs.lua
 ### Hyprland (Lua 0.55+)
 
 ```
-.config/hypr/
+hyprland/.config/hypr/
 ├── hyprland.lua          ← ENTRY POINT: solo require()s
 ├── conf/
 │   ├── theme.lua         ← ⭐ COLORES: cambiar tema = editar SOLO esto
 │   ├── env.lua           ← ENV VARS: Qt, GTK, Wayland, cursor
 │   ├── monitors.lua      ← MONITORES: catch-all (tu setup → userprefs.lua)
 │   ├── general.lua       ← LAYOUT/GAPS/BORDERS
-│   ├── decoration.lua    ← BLUR/ROUNDING/SHADOWS (lee .variant auto)
+│   ├── decoration.lua    ← BLUR/ROUNDING/SHADOWS
 │   ├── animations.lua    ← CURVAS BEZIER y transiciones
 │   ├── input.lua         ← TECLADO/MOUSE/TOUCHPAD/GESTOS
 │   ├── keybinds.lua      ← ⭐ ATAJOS (lo que más editarás)
 │   ├── rules.lua         ← WINDOW/LAYER RULES
-│   ├── autostart.lua     ← DAEMONS al iniciar (lee .variant auto)
+│   ├── autostart.lua     ← DAEMONS al iniciar (quickshell, hyprpaper, etc.)
 │   └── nvidia.lua        ← NVIDIA (auto-incluido por installer)
 ├── userprefs.lua         ← ⭐ TUS OVERRIDES (nunca sobrescrito)
-├── .variant              ← "dev" o "macos" (escrito por installer)
 ├── hyprlock.conf         ← Lock screen (hyprlang, no Lua)
 ├── hypridle.conf         ← Idle timeouts (hyprlang)
 └── hyprpaper.conf        ← Wallpaper estático (hyprlang)
 ```
 
+### Shell (quickshell — reemplaza waybar + mako)
+
+```
+quickshell/.config/quickshell/
+└── shell.qml             ← SHELL: barra, notificaciones, futuros launcher/power
+                            Live-reload al guardar. Docs: quickshell.outfoxxed.me
+```
+
+### Terminal y editor
+
+```
+kitty/.config/kitty/
+└── kitty.conf            ← TERMINAL: font, opacity, colores (JetBrains Mono)
+nvim/.config/nvim/        ← EDITOR: NvChad + lazy.nvim
+├── init.lua              ← ENTRY POINT: bootstrap lazy + tema
+├── lua/chadrc.lua        ← TEMA y UI de NvChad
+├── lua/options.lua       ← opciones de neovim
+├── lua/mappings.lua      ← atajos
+├── lua/autocmds.lua      ← autocmds
+├── lua/plugins/init.lua  ← plugins extra
+├── lua/configs/          ← lazy, lspconfig, conform
+└── lazy-lock.json        ← versiones pinneadas de plugins
+```
+
 ### Herramientas
 
 ```
-.config/
-├── waybar/
-│   ├── config.jsonc      ← MÓDULOS de la barra
-│   └── style.css         ← ESTILOS (@define-color para cambiar paleta)
-├── ghostty/config        ← TERMINAL: font, theme, opacity
-├── fuzzel/fuzzel.ini     ← LAUNCHER: font, colores
-├── mako/config           ← NOTIFICACIONES (dev): colores, timeout
-├── yazi/yazi.toml        ← FILE MANAGER TUI: sort, hidden, opener
-├── wlogout/{layout,style.css} ← POWER MENU
-├── gtk-3.0/settings.ini  ← GTK3 theme/icons/cursor
-├── gtk-4.0/settings.ini  ← GTK4
-├── fastfetch/config.jsonc← SYSTEM INFO
-├── starship.toml         ← PROMPT: formato, módulos, paleta
-└── tmux/tmux.conf        ← MULTIPLEXOR: prefix, splits, plugins
+fuzzel/.config/fuzzel/fuzzel.ini     ← LAUNCHER (temporal, TODO: migrar a quickshell)
+yazi/.config/yazi/yazi.toml          ← FILE MANAGER TUI: sort, hidden, opener
+gtk/.config/{gtk-3.0,gtk-4.0}/settings.ini ← GTK dark + Papirus icons
+fastfetch/.config/fastfetch/config.jsonc   ← SYSTEM INFO
+starship/.config/starship.toml       ← PROMPT: formato, módulos, paleta
+tmux/.config/tmux/tmux.conf          ← MULTIPLEXOR: prefix, splits, plugins
 ```
 
 ### Shell y sistema
 
 ```
-home/.zshrc               ← SHELL: plugins zinit, aliases, exports
+zsh/.zshrc                ← SHELL: plugins zinit, aliases, exports
 packages/
-├── pacman.txt            ← Paquetes oficiales
-├── aur.txt               ← Paquetes AUR (ambas variantes)
-└── aur-macos.txt         ← Paquetes AUR extra (macOS)
-install.sh                ← INSTALADOR
+└── pacman.txt            ← Paquetes oficiales (sin AUR)
+install.sh                ← INSTALADOR (descubre paquetes dinámicamente)
 Makefile                  ← make install | stow | unstow | update
 ```
 
@@ -105,8 +106,8 @@ Makefile                  ← make install | stow | unstow | update
 
 | Keybind | Acción |
 |---|---|
-| `SUPER + Q` | Terminal (ghostty) |
-| `SUPER + R` | Launcher (fuzzel) |
+| `SUPER + Q` | Terminal (kitty) |
+| `SUPER + R` | Launcher (fuzzel — TODO: quickshell popup) |
 | `SUPER + B` | Browser (firefox) |
 | `SUPER + E` | File manager (thunar) |
 | `SUPER + W` | Cerrar ventana |
@@ -116,36 +117,39 @@ Makefile                  ← make install | stow | unstow | update
 | `SUPER + SHIFT + h/j/k/l` | Mover ventana |
 | `SUPER + 1-0` | Workspace 1-10 |
 | `SUPER + S` | Scratchpad |
-| `SUPER + V` | Clipboard history |
+| `SUPER + V` | Clipboard history (fuzzel — TODO: quickshell) |
 | `SUPER + Tab` | Cycle windows |
-| `Print` | Screenshot región |
-| `SUPER + CTRL + L` | Lock screen |
-| `SUPER + SHIFT + L` | Power menu |
+| `Print` | Screenshot región + anotar (swappy) |
+| `SUPER + Print` | Screenshot pantalla completa al clipboard |
+| `CTRL + Print` | Screenshot región al clipboard |
+| `SUPER + CTRL + L` | Lock (hyprlock) |
+| `SUPER + SHIFT + L` | Power menu (TODO: quickshell) |
 | `SUPER + SHIFT + G` | Toggle gaps |
 | `SUPER + SHIFT + B` | Toggle blur |
 
 ## Extender
 
-**Nuevo keybind** → `.config/hypr/conf/keybinds.lua`:
+**Nuevo keybind** → `hyprland/.config/hypr/conf/keybinds.lua`:
 ```lua
 hl.bind("SUPER + N", hl.dsp.exec_cmd("mi-app"))
 ```
 
-**Nueva window rule** → `.config/hypr/conf/rules.lua`:
+**Nueva window rule** → `hyprland/.config/hypr/conf/rules.lua`:
 ```lua
 hl.window_rule({ match = { class = "^MiApp$" }, float = true })
 ```
 
-**Cambiar colores** → `.config/hypr/conf/theme.lua` + waybar `style.css` + `fuzzel.ini` + `mako/config`
+**Cambiar colores** → `hyprland/.config/hypr/conf/theme.lua` (paleta centralizada) + `quickshell/.config/quickshell/shell.qml` (colores del bar inline)
 
-**Layout custom** →
-```lua
-hl.layout.register("cols", {
-    recalculate = function(ctx)
-        for i, t in ipairs(ctx.targets) do t:place(ctx:column(i, #ctx.targets)) end
-    end,
-})
-```
+**Extender quickshell** → `quickshell/.config/quickshell/shell.qml`:
+- Workspaces: `Quickshell.Hyprland.Hyprland`
+- System tray: `Quickshell.Services.SystemTray`
+- Audio: `Quickshell.Services.Pipewire`
+- Red/batería: `Quickshell.Networking` / `Quickshell.Services.UPower`
+- Launcher popup: `PopupWindow` + `DesktopEntries`
+- Power menu: `PopupWindow` + `hl.exec_cmd("systemctl ...")`
+
+Docs: https://quickshell.outfoxxed.me/docs/v0.3.0/guide
 
 ## CLI Stack
 
