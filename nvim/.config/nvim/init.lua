@@ -1,37 +1,18 @@
-vim.g.base46_cache = vim.fn.stdpath "data" .. "/base46/"
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║  INIT.LUA — Entry point                                     ║
+-- ║                                                              ║
+-- ║  Setea el leader ANTES de cargar plugins (crítico: si un    ║
+-- ║  plugin cachea el leader antes de que lo setees, sus        ║
+-- ║  keymaps se rompen). Después carga la config modular.        ║
+-- ╚══════════════════════════════════════════════════════════════╝
+
+-- ── Leader keys ───────────────────────────────────────────────
+-- Espacio como leader (lo más reachable en home row)
 vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
--- bootstrap lazy and all plugins
-local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
-
-if not vim.uv.fs_stat(lazypath) then
-  local repo = "https://github.com/folke/lazy.nvim.git"
-  vim.fn.system { "git", "clone", "--filter=blob:none", repo, "--branch=stable", lazypath }
-end
-
-vim.opt.rtp:prepend(lazypath)
-
-local lazy_config = require "configs.lazy"
-
--- load plugins
-require("lazy").setup({
-  {
-    "NvChad/NvChad",
-    lazy = false,
-    branch = "v2.5",
-    import = "nvchad.plugins",
-  },
-
-  { import = "plugins" },
-}, lazy_config)
-
--- load theme
-dofile(vim.g.base46_cache .. "defaults")
-dofile(vim.g.base46_cache .. "statusline")
-
-require "options"
-require "autocmds"
-
-vim.schedule(function()
-  require "mappings"
-end)
+-- ── Config modular ────────────────────────────────────────────
+require("config.options")
+require("config.keymaps")
+require("config.autocmds")
+require("config.lazy")
