@@ -40,7 +40,7 @@ return {
       treesitter = true,   -- highlighting de treesitter con paleta catppuccin
       -- Las siguientes se activan automáticamente cuando instalemos los plugins:
       -- telescope = { enabled = true },
-      -- gitsigns = true,
+      gitsigns = true,
       -- lualine = { enabled = true },
       -- mason = true,
       -- which_key = true,
