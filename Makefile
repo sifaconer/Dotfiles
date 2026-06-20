@@ -1,5 +1,9 @@
 .PHONY: install install-dev install-macos stow unstow update check
 
+# Paquetes stow: todos los dirs top-level excepto `packages` (soporte).
+# Agregar una app = crear un dir top-level. Se detecta automáticamente.
+STOW_PKGS := $(filter-out packages,$(patsubst %/,%,$(wildcard */)))
+
 install:
 	./install.sh
 
@@ -10,9 +14,7 @@ install-macos:
 	./install.sh --yes --variant macos
 
 stow:
-	stow -v -t $(HOME) --no-folding .config
-	ln -snf $(PWD)/.config/starship.toml $(HOME)/.config/starship.toml
-	ln -snf $(PWD)/home/.zshrc $(HOME)/.zshrc
+	stow -v -t $(HOME) $(STOW_PKGS)
 
 unstow:
 	./install.sh --uninstall
