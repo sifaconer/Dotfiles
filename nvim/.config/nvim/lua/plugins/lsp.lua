@@ -14,6 +14,7 @@ return {
   dependencies = {
     "mason-org/mason.nvim",   -- asegurar que mason carga antes
     "saghen/blink.cmp",       -- asegurar que blink carga antes (capabilities)
+    "ibhagwan/fzf-lua",       -- asegurar que fzf-lua carga antes (LSP pickers)
   },
 
   config = function()
@@ -65,32 +66,37 @@ return {
       callback = function(args)
         local bufnr = args.buf
         local client = lsp.get_client_by_id(args.data.client_id)
+        local fzf = require("fzf-lua")
 
-        -- Saltar a definición/referencias
-        map("n", "gd", function() lsp.buf.definition() end, { buffer = bufnr, desc = "Go to definition" })
+        -- Saltar a definición/referencias (fzf-lua pickers)
+        -- jump1=true: si hay 1 resultado, salta directo sin abrir picker
+        map("n", "gd", function() fzf.lsp_definitions({ jump1 = true }) end, { buffer = bufnr, desc = "Go to definition" })
         map("n", "gD", function() lsp.buf.declaration() end, { buffer = bufnr, desc = "Go to declaration" })
-        map("n", "gi", function() lsp.buf.implementation() end, { buffer = bufnr, desc = "Go to implementation" })
-        map("n", "gr", function() lsp.buf.references() end, { buffer = bufnr, desc = "Find references" })
-        map("n", "gy", function() lsp.buf.type_definition() end, { buffer = bufnr, desc = "Go to type definition" })
+        map("n", "gi", function() fzf.lsp_implementations({ jump1 = true }) end, { buffer = bufnr, desc = "Go to implementation" })
+        map("n", "gr", function() fzf.lsp_references() end, { buffer = bufnr, desc = "Find references" })
+        map("n", "gy", function() fzf.lsp_typedefs({ jump1 = true }) end, { buffer = bufnr, desc = "Go to type definition" })
 
-        -- Hover (documentación del símbolo bajo el cursor)
+        -- LSP finder: combina definitions + references + implementations en una vista
+        map("n", "<leader>ls", function() fzf.lsp_finder() end, { buffer = bufnr, desc = "LSP finder (def+ref+impl)" })
+
+        -- Hover (documentación del símbolo bajo el cursor) — nativo, fzf no lo reemplaza
         map("n", "K", function() lsp.buf.hover() end, { buffer = bufnr, desc = "Hover documentation" })
 
-        -- Code actions (refactors, fixes, imports)
-        map({ "n", "v" }, "<leader>ca", function() lsp.buf.code_action() end, { buffer = bufnr, desc = "Code action" })
+        -- Code actions (refactors, fixes, imports) — fzf-lua picker
+        map({ "n", "v" }, "<leader>ca", function() fzf.lsp_code_actions() end, { buffer = bufnr, desc = "Code action" })
 
-        -- Rename (renombrar símbolo en todo el proyecto)
+        -- Rename (renombrar símbolo en todo el proyecto) — nativo, fzf no lo reemplaza
         map("n", "<leader>rn", function() lsp.buf.rename() end, { buffer = bufnr, desc = "Rename symbol" })
 
-        -- Formatear buffer
+        -- Formatear buffer — nativo, fzf no lo reemplaza
         map("n", "<leader>cf", function() lsp.buf.format({ async = true }) end, { buffer = bufnr, desc = "Format buffer" })
 
-        -- Navegar diagnostics
+        -- Navegar diagnostics — ]d/[d nativos (jump), <leader>dl con fzf-lua picker
         map("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, { buffer = bufnr, desc = "Next diagnostic" })
         map("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, { buffer = bufnr, desc = "Previous diagnostic" })
-        map("n", "<leader>dl", function() vim.diagnostic.set_loclist() end, { buffer = bufnr, desc = "Diagnostics list" })
+        map("n", "<leader>dl", function() fzf.diagnostics_workspace() end, { buffer = bufnr, desc = "Diagnostics (workspace)" })
 
-        -- Signature help (parámetros de función mientras escribís)
+        -- Signature help (parámetros de función mientras escribís) — nativo
         map("i", "<C-k>", function() lsp.buf.signature_help() end, { buffer = bufnr, desc = "Signature help" })
 
         -- ── Format on save (opcional, por server) ──────────────
