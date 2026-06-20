@@ -30,9 +30,10 @@ return {
     })
 
     -- ── 2. Habilitar servers ──────────────────────────────────
-    -- Los configs están en lsp/gopls.lua y lsp/basedpyright.lua.
-    -- nvim los auto-carga. enable() arranca el server según filetype.
-    lsp.enable({ "gopls", "basedpyright" })
+    -- Los configs están en lsp/*.lua (auto-cargados por nvim).
+    -- ty usa el binario del sistema (~/.local/bin/ty, Astral).
+    -- Los demás via mason (mason.lua los auto-instala).
+    lsp.enable({ "gopls", "ty", "clangd", "rust_analyzer", "vtsls", "elixirls" })
 
     -- ── 3. Diagnostics ────────────────────────────────────────
     -- Cómo se muestran los errores/warnings/hints.

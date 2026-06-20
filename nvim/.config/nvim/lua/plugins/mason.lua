@@ -26,15 +26,13 @@ return {
 
     opts = {
       -- Tools a auto-instalar. Se instalan en background al abrir nvim.
-      -- Agregá más conforme agreguemos lenguajes en capas futuras.
+      -- ty NO está acá: usa el binario del sistema (~/.local/bin/ty, Astral).
       ensure_installed = {
         "gopls",           -- Go LSP
-        "basedpyright",    -- Python LSP
-        -- Capas futuras:
-        -- "clangd",         -- C/C++ LSP
-        -- "rust-analyzer",  -- Rust LSP
-        -- "vtsls",          -- TypeScript/JavaScript LSP
-        -- "elixir-ls",      -- Elixir LSP
+        "clangd",          -- C/C++ LSP
+        "rust-analyzer",   -- Rust LSP
+        "vtsls",           -- TypeScript/JavaScript LSP
+        "elixir-ls",       -- Elixir LSP
       },
       auto_update = true,
       run_on_start = true,  -- instalar al arrancar nvim
