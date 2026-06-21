@@ -132,11 +132,34 @@ install_packages() {
     fi
 }
 
+# ── Instalar flatpaks (apps fuera de repos oficiales) ────────
+install_flatpaks() {
+    local file="$1"
+    local -a apps=()
+    read_pkglist "$file" apps
+    (( ${#apps[@]} )) || return 0
+
+    if ! command -v flatpak >/dev/null 2>&1; then
+        warn "flatpak no está instalado; saltando ${#apps[@]} apps de $file"
+        return 0
+    fi
+
+    info "Instalando ${#apps[@]} flatpaks (flathub)..."
+    for app in "${apps[@]}"; do
+        if flatpak install -y flathub "$app" >> "$LOG_FILE" 2>&1; then
+            ok "  ✓ $app"
+        else
+            warn "  ✗ $app (no encontrado o error)"
+        fi
+    done
+}
+
 install_all_packages() {
     (( INSTALL_PACKAGES )) || { info "Saltando instalación de paquetes (--skip-packages)"; return 0; }
     ask "¿Instalar paquetes?" y || return 0
 
     install_packages "$SCRIPT_DIR/packages/pacman.txt"
+    install_flatpaks "$SCRIPT_DIR/packages/flatpak.txt"
     ok "Instalación de paquetes completa"
 }
 

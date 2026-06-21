@@ -1,0 +1,7 @@
+# FLATPAK packages — apps que NO están en repos oficiales de Arch.
+# Una línea por App ID (Flathub). # = comentario.
+# Se instalan con: flatpak install -y flathub <app-id>
+
+# Neovide — GUI con GPU para Neovim (animaciones, ligaduras).
+# No está en repos oficiales; AUR está prohibido → Flatpak oficial de Flathub.
+dev.neovide.neovide
