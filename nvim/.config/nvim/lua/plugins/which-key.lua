@@ -22,6 +22,7 @@ return {
     -- Los keymaps individuales se auto-descubren por su `desc`.
     spec = {
       { "<leader>f", group = "find",    icon = "" },
+      { "<leader>b", group = "buffer",  icon = "" },
       { "<leader>g", group = "git",     icon = "" },
       { "<leader>h", group = "hunk",    icon = "" },
       { "<leader>w", proxy = "<c-w>", group = "windows" },
