@@ -28,6 +28,7 @@ return {
       { "<leader>w", proxy = "<c-w>", group = "windows" },
       { "<leader>c", group = "code",    icon = "󰅩" },
       { "<leader>d", group = "diagnostics", icon = "󱖫" },
+      { "<leader>x", group = "trouble",  icon = "" },
       { "<leader>l", group = "lsp",     icon = "󰒍" },
       { "<leader>t", group = "toggle",  icon = "" },
       { "<leader>q", group = "quit",    icon = "" },
