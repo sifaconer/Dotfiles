@@ -32,6 +32,7 @@ opt.smartcase = true       -- PERO si escribís Mayúscula, vuelve case-sensitiv
 -- ── Splits ────────────────────────────────────────────────────
 opt.splitbelow = true      -- :split abre abajo (más natural)
 opt.splitright = true      -- :vsplit abre a la derecha
+opt.splitkeep = "screen"   -- el contenido no "salta" al abrir/cerrar paneles (requerido por edgy.nvim)
 
 -- ── Persistencia ──────────────────────────────────────────────
 opt.undofile = true        -- undo persiste entre sesiones (en ~/.local/state/nvim/undo)
