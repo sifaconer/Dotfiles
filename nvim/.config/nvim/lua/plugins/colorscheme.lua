@@ -14,7 +14,10 @@ return {
   opts = {
     flavour = "mocha",     -- latte, frappe, macchiato, mocha
     background = { light = "latte", dark = "mocha" },
-    transparent_background = false,  -- respetamos la opacidad del terminal
+    -- TRUE: nvim NO pinta su fondo → se ve la opacidad de kitty (0.92) +
+    -- el blur global de Hyprland (conf/decoration.lua). Coherencia con el rice.
+    -- Si fuera false, catppuccin pintaría #1e1e2e opaco y TAPARÍA la transparencia.
+    transparent_background = true,
 
     styles = {
       comments = { "italic" },
