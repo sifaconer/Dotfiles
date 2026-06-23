@@ -1,28 +1,26 @@
-return {
-  {
-    "stevearc/conform.nvim",
-    -- event = 'BufWritePre', -- uncomment for format on save
-    opts = require "configs.conform",
-  },
-
-  -- These are some examples, uncomment them if you want to see them work!
-  {
-    "neovim/nvim-lspconfig",
-    config = function()
-      require "configs.lspconfig"
-    end,
-  },
-
-  -- test new blink
-  -- { import = "nvchad.blink.lazyspec" },
-
-  -- {
-  -- 	"nvim-treesitter/nvim-treesitter",
-  -- 	opts = {
-  -- 		ensure_installed = {
-  -- 			"vim", "lua", "vimdoc",
-  --      "html", "css"
-  -- 		},
-  -- 	},
-  -- },
-}
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║  PLUGINS — Entry point del directorio de specs                ║
+-- ║                                                              ║
+-- ║  Cada archivo .lua en este directorio es un spec de lazy.nvim.║
+-- ║  lazy los descubre automáticamente — no hay que registrar    ║
+-- ║  nada acá.                                                   ║
+-- ║                                                              ║
+-- ║  Estructura de un spec:                                      ║
+-- ║    return {                                                  ║
+-- ║      "author/plugin-name",                                   ║
+-- ║      opts = {},          -- opciones pasadas a config()       ║
+-- ║      config = function(_, opts) ... end,  -- setup custom     ║
+-- ║      keys = { ... },        -- keymaps lazy-loaded            ║
+-- ║      event = "BufRead",     -- cargar en evento              ║
+-- ║      ft = { "go" },         -- cargar solo en filetype       ║
+-- ║    }                                                         ║
+-- ║                                                              ║
+-- ║  Próximos plugins (Capas 2+):                                ║
+-- ║    colorscheme.lua  — catppuccin (Capa 2)                    ║
+-- ║    treesitter.lua   — sintaxis real (Capa 2)                 ║
+-- ║    lsp.lua          — gopls, pyright, etc. (Capa 3)          ║
+-- ║    completion.lua   — blink.cmp (Capa 3)                     ║
+-- ║    telescope.lua    — fuzzy finder (Capa 4)                  ║
+-- ║    lualine.lua      — statusline (Capa 5)                    ║
+-- ╚══════════════════════════════════════════════════════════════╝
+return {}
